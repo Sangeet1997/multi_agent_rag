@@ -1,10 +1,16 @@
 import gradio as gr
-from agents.parent_agent import ParentAgent
+from llm_interface.ollama_api import query_ollama
+from agents.base_agent import ProblemSolver
+
 
 def solve_problem(problem_statement):
-    agent = ParentAgent(problem_statement)
-    result = agent.run()
+
+    ps = ProblemSolver()
+    result = ps.solve(problem_statement)
     return result
+
+    # return query_ollama(problem_statement)
+
 
 # UI Setup
 with gr.Blocks() as interface:
