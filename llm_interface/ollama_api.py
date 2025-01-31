@@ -1,6 +1,20 @@
 from langchain_ollama import OllamaLLM
 import chromadb
 from langchain.prompts import PromptTemplate
+from langchain_groq import ChatGroq
+import os
+
+
+def query_groq(prompt):
+    llm = ChatGroq(
+        model_name="llama-3.3-70b-versatile",
+        temperature=0.7
+    )
+    result = llm.invoke(prompt)
+    print(result)
+    return result.content
+
+
 
 def query_ollama(prompt):
 

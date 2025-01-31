@@ -1,12 +1,16 @@
 import gradio as gr
 from llm_interface.ollama_api import query_ollama
 from llm_interface.ollama_api import query_rag
+from llm_interface.ollama_api import query_groq
 from agents.base_agent import base_agent
 import os
 from vectorization.create_database import create_collection
 from PyPDF2 import PdfReader, PdfWriter
 
 
+def solve_problem_groq(problem_statement):
+
+    return query_groq(problem_statement)
 
 
 def solve_problem(problem_statement):
@@ -57,6 +61,13 @@ with gr.Blocks() as interface:
         solve_button = gr.Button("Solve Without RAG")
         output = gr.Markdown(label="Reasoning Process & Solution")
         solve_button.click(solve_problem, inputs=problem_input, outputs=output)
+
+    # Problem-solving sections
+    with gr.Tab("Problem Solving Groq"):
+        problem_input = gr.Textbox(label="Enter Problem Statement")
+        solve_button = gr.Button("Solve Without RAG")
+        output = gr.Markdown(label="Reasoning Process & Solution")
+        solve_button.click(solve_problem_groq, inputs=problem_input, outputs=output)
 
     with gr.Tab("Problem Solving with RAG"):
         problem_input_rag = gr.Textbox(label="Enter Problem Statement")
