@@ -27,7 +27,7 @@ def child_list(problem_statement):
     # Create the structured breakdown prompt
     prompt = ChatPromptTemplate.from_messages([
         ("system", """
-    Task: Break down the problem
+    Task: Break down the problem(2 to 3 subtasks)
     Generate roles for child agents, each with a corresponding sub-task.
     Structure response as an array of JSON objects in this format(ONLY RESPOND WITH THIS ARRAY):
     [
