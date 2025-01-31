@@ -1,5 +1,9 @@
 import uuid
 from llm_interface.ollama_api import query_ollama
+from prompt_templates.child_json_template import child_list
+from llm_interface.ollama_api import query_groq
+
+
 
 class base_agent:
     def __init__(self, parent_id=None, config=None):
@@ -19,22 +23,21 @@ class base_agent:
         self.num_branches = config.get('num_branches', 2)
 
         # Prompt Configuration
-        self.system_prompt = config.get('system_prompt', 'You are a helpful assistant')
         self.task_prompt = config.get('task_prompt', 'Perform your task effectively')
 
         #problem statement
         self.problem_statement = config.get('problem_statement', None)
 
 
-    def call_ollama(self, prompt):
-        return query_ollama(prompt)
+    def call_llm(self, prompt):
+        return query_groq(prompt)
     
 
     # Solve the problem at the current agent level if maximum depth is reached.
     def solve_problem(self):
-        solution_prompt = f"{self.system_prompt}\nTask: {self.task_prompt}\nProblem: {self.problem_statement}\nProvide a solution."
-        solution = self.call_ollama(solution_prompt)
-        # task : exception handling and reprompting
+        solution_prompt = f"Overall Problem: {self.problem_statement}\nThis is your role: {self.role}\nThis is your task: {self.task_prompt}\nProvide a solution."
+        solution = self.call_llm(solution_prompt)
+        print(solution)
         return solution or "No solution generated."
     
 
@@ -49,40 +52,28 @@ class base_agent:
         if self.current_depth >= self.overall_depth:
             return [self.solve_problem()]
 
-        # Request problem breakdown from Ollama
-        breakdown_prompt = (
-            f"{self.system_prompt}\nTask: Break down the problem\n"
-            f"Problem: {self.problem_statement}\n"
-            f"Generate {self.num_branches} roles for each child agent. And give each of them a sub-task"
-            f"Generate response in this format |role1| , |task1|, |role2|, |task2| ... "
-            f"DONT RETURN ANYTHING ELSE."
-        )
-        breakdown_response = self.call_ollama(breakdown_prompt)
-        
-        if not breakdown_response:
-            print("Failed to generate problem breakdown.")
-            return []
+
+        response = child_list(self.task_prompt)
 
         # Parse breakdown response into tasks
-        subtasks = [task.strip() for task in breakdown_response.split("\n") if task.strip()]
         child_agents = []
 
-        for i, task in enumerate(subtasks[:self.num_branches]):
+        for i, item in enumerate(response):
+            role = item.get('role', f'child_agent_{i}')
+            task = item.get('task', 'No task provided')
+
             child_config = {
-                "role": f"child_agent_{i}",
-                "expertise": "specialized",
+                "role": role,
                 "overall_depth": self.overall_depth,
                 "current_depth": self.current_depth + 1,
                 "num_branches": self.num_branches,
-                "system_prompt": self.system_prompt,
-                "task_prompt": f"Handle sub-task: {task}",
-                "problem_statement": task
+                "task_prompt": task,
+                "problem_statement": self.problem_statement
             }
             child_agents.append(self.create_child(child_config))
 
         return child_agents
     
-
     # Execute the agent's logic, creating children if needed or solving the problem.
     def run(self):
         if self.current_depth >= self.overall_depth:
