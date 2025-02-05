@@ -22,6 +22,16 @@ def solve_problem_RAG(problem_statement):
 
     return query_rag(problem_statement)
 
+def solve_cot_reasoning(problem_input, role_input, branches_slider, depth_slider):
+    config = {
+        'role': role_input,
+        'overall_depth': depth_slider,
+        'problem_statement': problem_input,
+        'num_branches': branches_slider
+    }
+    agent = base_agent(config=config)
+    return agent.run()
+
 # Process uploaded PDF file and add to ChromaDB
 def process_pdf(pdf_file):
     # Save uploaded file temporarily
@@ -62,7 +72,7 @@ with gr.Blocks() as interface:
         output = gr.Markdown(label="Reasoning Process & Solution")
         solve_button.click(solve_problem, inputs=problem_input, outputs=output)
 
-    # Problem-solving sections
+    # Problem-solving sections 
     with gr.Tab("Problem Solving Groq"):
         problem_input = gr.Textbox(label="Enter Problem Statement")
         solve_button = gr.Button("Solve Without RAG")
@@ -74,5 +84,16 @@ with gr.Blocks() as interface:
         solve_rag_button = gr.Button("Solve With RAG")
         output_rag = gr.Markdown(label="Reasoning Process & Solution")
         solve_rag_button.click(solve_problem_RAG, inputs=problem_input_rag, outputs=output_rag)
+
+    with gr.Tab("COT reasoning"):
+        problem_input = gr.Textbox(label="Problem Statement")
+        role_input = gr.Textbox(label="Role")
+        branches_slider = gr.Slider(minimum=2, maximum=5, step=1, label="Number of Branches", value=3)
+        depth_slider = gr.Slider(minimum=2, maximum=5, step=1, label="Recursion Depth", value=3)
+        solve_button = gr.Button("Solve")
+        cot_output = gr.Textbox(label="Response from COT agent", interactive=False)
+        solve_button.click(solve_cot_reasoning, inputs=[problem_input, role_input, branches_slider, depth_slider], outputs=cot_output)
+
+        # Note: You'll need to implement the cot_function and add the click handler here
 
 interface.launch()

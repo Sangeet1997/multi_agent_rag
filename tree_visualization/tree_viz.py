@@ -1,33 +1,70 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import gradio as gr
-from PIL import Image
+import plotly.graph_objects as go
+import json
+from collections import defaultdict
 
-# Adjacency list representation of the tree
-adj_list = {
-    "root": ["child1", "child2"],
-    "child1": ["grandchild3333", "grandchild2"],
-    "child2": [],
-    "grandchild1": [],
-    "grandchild2": []
-}
+# Load and parse the JSON file
+def fun(file_path):
+    with open(file_path, 'r') as file:
+        solutions_data = json.load(file)
+    return solutions_data
 
-# Build the directed graph
-G = nx.DiGraph()
-for parent, children in adj_list.items():
-    for child in children:
-        G.add_edge(parent, child)
+solutions_data = fun("solutions.json")
 
-# Draw and save the tree
-plt.figure(figsize=(6, 4))
-pos = nx.spring_layout(G)
-nx.draw(G, pos, with_labels=True, node_size=1200, node_color='lightblue', font_size=8)
-plt.title("Nested Tree Visualization (From Adjacency List)")
-plt.savefig("nested_tree_adjacency.png")
-plt.close()
+adj_list = defaultdict(list)
+for ele in solutions_data:
+    if ele["parent"] is None:
+        continue
+    adj_list[ele["parent"]].append(ele["agent_id"])
 
-def display_tree():
-    return Image.open("nested_tree_adjacency.png")
+print(adj_list)
 
-interface = gr.Interface(fn=display_tree, inputs=None, outputs="image", title="Nested Tree Visualization")
+def build_tree_structure(adj_list, root="root"):
+    """
+    Converts an adjacency list to Plotly-compatible labels and parents for Sunburst.
+    """
+    labels = []
+    parents = []
+
+    # Recursive function to traverse the tree
+    def traverse(node, parent=None):
+        labels.append(node)
+        parents.append(parent if parent else "")
+        for child in adj_list.get(node, []):
+            traverse(child, node)
+
+    traverse(root)
+    return labels, parents
+
+# Generate labels and parent-child relationships
+root_node = list(set(adj_list.keys()) - {child for children in adj_list.values() for child in children})
+root_node = root_node[0] if root_node else "root"
+labels, parents = build_tree_structure(adj_list, root=root_node)
+
+def display_interactive_tree():
+    """
+    Returns an interactive Plotly tree using Sunburst.
+    """
+    fig = go.Figure(go.Sunburst(
+        labels=labels,
+        parents=parents,
+        hoverinfo='label+percent parent',
+        marker=dict(colorscale='Viridis')
+    ))
+    fig.update_layout(margin=dict(t=0, l=0, r=0, b=0))
+    fig.show()
+
+    # Placeholder for Gradio compatibility
+    return "Interactive Plot Displayed (Check Plotly Visualization)"
+
+# Gradio interface for the interactive plot
+interface = gr.Interface(
+    fn=display_interactive_tree,
+    inputs=None,
+    outputs="text",
+    title="Interactive Tree Visualization"
+)
+
 interface.launch()

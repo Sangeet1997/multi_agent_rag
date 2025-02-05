@@ -125,7 +125,7 @@ class base_agent:
             f"Your role is:{self.role}"
             f"Your Task:{self.task_prompt}"
             f"Solutions from your sub agents: {solutions}"
-            f"Combile the solutions of these agents summarize it and give your solution, precise and to the point in 100 words or less."
+            f"Compile the solutions of these agents summarize it and give your solution, precise and to the point in 100 words or less."
         )
         response = self.call_llm(prompt)
 
@@ -163,13 +163,13 @@ class base_agent:
 # agent1.run()
 
 # test2
-config1 = {
-    'role': 'Parents',
-    'expertise': 'Every Day Life',
-    'overall_depth': 3,
-    'problem_statement': 'Plan a surprise birthday party for your son, including venue, catering, invitations, entertainment, and gifts.'
-}
+# config1 = {
+#     'role': 'Parents',
+#     'expertise': 'Every Day Life',
+#     'overall_depth': 3,
+#     'problem_statement': 'Plan a surprise birthday party for your son, including venue, catering, invitations, entertainment, and gifts.'
+# }
 
-agent1 = base_agent(config=config1)
-agent1.run()
+# agent1 = base_agent(config=config1)
+# agent1.run()
 
